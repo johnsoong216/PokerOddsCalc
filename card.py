@@ -6,25 +6,25 @@ class Card:
     - Club 2
     - Heart 3
     - Spade 4
-    
+
     Value:
     - Two 2
     ....
     - King 13
     - Ace 14
     """
-    
+
     def __init__(self, value:int, suit:int) -> None:
         self.suit = suit
         self.value = value
-    
+
     def __equals__(self, other) -> bool:
         if isinstance(other, Card):
             return self.value == other.value
-        return false
-        
-    
-    
+        return False
+
+
+
     def __str__(self) -> str:
         suitStrings = {1: 'd', 2: 'c', 3: 'h', 4: 's'}
         numStrings = {2: '2', 3: '3', 4: '4', 5:'5', 6:'6', 7:'7', 8:'8', 9:'9',
@@ -35,4 +35,3 @@ class Card:
 if __name__ == '__main__':
     a = Card(7, 3)
     print(a)
-    
