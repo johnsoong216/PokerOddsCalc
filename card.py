@@ -1,4 +1,4 @@
-class Card:
+class Card(tuple):
     """
     A standard poker card with value and suit
     Suit:
@@ -14,15 +14,18 @@ class Card:
     - Ace 14
     """
 
-    def __init__(self, value:int, suit:int) -> None:
+    def __init__(self, value: int, suit: int) -> None:
         self.suit = suit
         self.value = value
+
+    def __new__(self, value: int, suit: int) -> tuple:
+        return tuple.__new__(Card, (value, suit))
+
 
     def __equals__(self, other) -> bool:
         if isinstance(other, Card):
             return self.value == other.value
         return False
-
 
 
     def __str__(self) -> str:
@@ -34,4 +37,8 @@ class Card:
 
 if __name__ == '__main__':
     a = Card(7, 3)
+    print(a[1])
     print(a)
+    print(a.value)
+    print(a.suit)
+

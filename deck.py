@@ -1,46 +1,44 @@
 import random
 from card import Card
 
+
 class Deck:
     """
     A standard deck of cards
     """
-    
+
     def __init__(self) -> None:
         self.deck = []
-        for suit in range(1,5):
+        for suit in range(1, 5):
             for num in range(2, 15):
                 self.deck.append(Card(num, suit))
-                
+
     def removeByCard(self, card: Card) -> Card:
         if card in self.deck:
             self.deck.remove(card)
             return card
-        return Card(1,1)
-    
-    def removeByIndex(self, index:int) -> Card:
+        return Card(1, 1)
+
+    def removeByIndex(self, index: int) -> Card:
         if index <= len(self.deck):
             result = self.deck.get(index)
             self.deck.pop(index)
             return result
-        return Card(1,1)
-    
+        return Card(1, 1)
+
     def shuffle(self) -> None:
         random.shuffle(self.deck)
-        
+
     def __str__(self) -> str:
         representation = "Deck: ["
         for card in self.deck:
             representation += card.__str__() + " "
-        representation += "]"    
+        representation += "]"
         return representation
-    
+
+
 if __name__ == '__main__':
     newDeck = Deck()
     print(newDeck)
     newDeck.shuffle()
     print(newDeck)
-    
-
-        
-                
