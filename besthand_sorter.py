@@ -12,21 +12,35 @@ class Sorter:
         self.starting_hand = starting_hand
         self.flop = flop
 
-    def besthand_solver(self,) -> "Categorizer":
-        print()
+    # def besthand_solver(self,) -> "Categorizer":
+    #     print()
 
-    def list_all_hands(self):
+    def besthand_solver(self):
         all_cards = self.starting_hand + self.flop
         # print(list(itertools.combinations(all_cards, 5)))
         all_hands = itertools.combinations(all_cards, 5)
-        best = Categorizer(all_hands[0])
+        best = Categorizer(self.flop)
+
         for hands in all_hands:
             curr = Categorizer(hands)
-            if best.category
+            # print(curr)
+            if curr.category > best.category:
+                best = curr
+            elif curr.category == best.category:
+                best = self.rank_under_same_category(best, Categorizer(hands))
+        print(best)
+        return best
+
+    def rank_under_same_category(self, obj1: "Categorizer", obj2: "Categorizer") -> "Categorizer":
+        for i in range(5):
+            if obj1.cardlist[i][0] > obj2.cardlist[i][0]:
+                return obj1
+        return obj1
+
 
 
 if __name__ == '__main__':
     b = [Card(10, 1), Card(10, 2), Card(10, 3), Card(11, 4), Card(14, 1)]
     a = [Card(14, 2), Card(14, 3)]
     new = Sorter(a, b)
-    new.list_all_hands()
+    new.besthand_solver()

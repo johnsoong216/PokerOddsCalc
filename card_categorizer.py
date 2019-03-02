@@ -19,8 +19,9 @@ class Categorizer:
     """
 
     def __init__(self, cardlist: list) -> None:
-        self.cardList = sorted(cardlist)
+        self.cardlist = sorted(cardlist)
         self.category = 0
+        self.assign_category()
 
 
     """
@@ -30,8 +31,8 @@ class Categorizer:
     """
 
     def suit_check(self) -> bool:
-        suit = self.cardList[0][1]
-        for card in self.cardList:
+        suit = self.cardlist[0][1]
+        for card in self.cardlist:
             if card[1] != suit:
                 return False
         return True
@@ -44,7 +45,7 @@ class Categorizer:
 
     def straight_check(self) -> bool:
         for i in range(4):
-            if (self.cardList[i+1][0] - self.cardList[i][0])!= 1:
+            if (self.cardlist[i + 1][0] - self.cardlist[i][0])!= 1:
                 return False
         return True
 
@@ -53,11 +54,11 @@ class Categorizer:
     """
 
     def assign_category(self) -> None:
-        nums = [card[0] for card in self.cardList]
+        nums = [card[0] for card in self.cardlist]
         nums_ordered = list(Counter(nums).values())
-        print(nums_ordered)
+        # print(nums_ordered)
 
-        if len(set(self.cardList)) != len(self.cardList):
+        if len(set(self.cardlist)) != len(self.cardlist):
             self.category = 0
         elif (self.suit_check()) and (self.straight_check()) and (nums == [i for i in range(10,15)]):
             self.category = 1
@@ -85,11 +86,12 @@ class Categorizer:
         category_strings = {0: 'Impossible Combination', 1: 'Royal Flush', 2: 'Straight Flush', 3: 'Four of a Kind',
                             4: 'Full House', 5: 'Flush', 6: 'Straight', 7: 'Three of a Kind', 8: 'Two Pairs',
                             9: 'One Pair', 10: 'High Card'}
-        return category_strings.get(self.category) + " " + str([card.__str__() for card in self.cardList])
+        return category_strings.get(self.category) + " " + str([card.__str__() for card in self.cardlist])
 
 
 if __name__ == '__main__':
     b = [Card(10, 1), Card(10, 2), Card(10, 3), Card(10, 4), Card(14, 1)]
     a = Categorizer(b)
-    a.assign_category()
-    print(a)
+    print(a.cardlist)
+    print(a.category)
+    # print(a)
