@@ -41,4 +41,3 @@ if __name__ == '__main__':
     print(a)
     print(a.value)
     print(a.suit)
-
