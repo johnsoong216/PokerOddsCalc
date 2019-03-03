@@ -97,7 +97,14 @@ class Categorizer:
         print(temp)
         # mydict.keys()[mydict.values().index(16)]
 
-
+        result = []
+        for value in list(sorted(set(temp.values()), reverse=True)):
+            l1 = sorted([k for k, v in temp.items() if v == value], reverse=True)
+            print(l1)
+            for i in range(len(l1)):
+                for j in range(value):
+                    result.append(l1[i])
+        return result
 
         # result = []
         # for item in temp:
@@ -107,7 +114,7 @@ class Categorizer:
 
 
 if __name__ == '__main__':
-    b = [Card(10, 1), Card(10, 2), Card(8, 3), Card(7, 4), Card(7, 1)]
+    b = [Card(10, 1), Card(10, 2), Card(8, 3), Card(10, 4), Card(7, 1)]
     a = Categorizer(b)
     a.assign_table()
     # print(a.cardlist)
