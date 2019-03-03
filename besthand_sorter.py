@@ -20,21 +20,26 @@ class Sorter:
         # print(list(itertools.combinations(all_cards, 5)))
         all_hands = itertools.combinations(all_cards, 5)
         best = Categorizer(self.flop)
+        # print(best)
 
         for hands in all_hands:
             curr = Categorizer(hands)
             # print(curr)
-            if curr.category > best.category:
+            if curr.category < best.category:
                 best = curr
             elif curr.category == best.category:
-                best = self.rank_under_same_category(best, Categorizer(hands))
+                best = self.rank_under_same_category(best, curr)
         print(best)
         return best
 
     def rank_under_same_category(self, obj1: "Categorizer", obj2: "Categorizer") -> "Categorizer":
+        # print(obj1.assign_table())
+        # print(obj2.assign_table())
         for i in range(5):
-            if obj1.cardlist[i][0] > obj2.cardlist[i][0]:
+            if obj1.assign_table()[i] > obj2.assign_table()[i]:
                 return obj1
+            else:
+                return obj2
         return obj1
 
 

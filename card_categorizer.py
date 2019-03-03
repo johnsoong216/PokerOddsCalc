@@ -53,9 +53,9 @@ class Categorizer:
 
     def assign_category(self) -> None:
         nums = [card[0] for card in self.cardlist]
-        print(nums)
+        # print(nums)
         nums_ordered = list(Counter(nums).values())
-        print(nums_ordered)
+        # print(nums_ordered)
 
         if len(set(self.cardlist)) != len(self.cardlist):
             self.category = 0
@@ -94,16 +94,17 @@ class Categorizer:
             else:
                 temp[card[0]] = 1
         temp = dict(sorted(temp.items(), key=lambda x: x[1], reverse=True))
-        print(temp)
+        # print(temp)
         # mydict.keys()[mydict.values().index(16)]
 
         result = []
         for value in list(sorted(set(temp.values()), reverse=True)):
             l1 = sorted([k for k, v in temp.items() if v == value], reverse=True)
-            print(l1)
+            # print(l1)
             for i in range(len(l1)):
                 for j in range(value):
                     result.append(l1[i])
+        # print(result)
         return result
 
         # result = []
