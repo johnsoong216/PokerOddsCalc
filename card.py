@@ -27,6 +27,11 @@ class Card(tuple):
             return self.value == other.value
         return False
 
+    def __gt__(self, other) -> bool:
+        if isinstance(other, Card):
+            return self.value >= other.value
+        return False
+
 
     def __str__(self) -> str:
         suitStrings = {1: 'd', 2: 'c', 3: 'h', 4: 's'}

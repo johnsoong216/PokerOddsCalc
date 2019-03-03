@@ -38,7 +38,6 @@ class Sorter:
         return obj1
 
 
-
 if __name__ == '__main__':
     b = [Card(10, 1), Card(10, 2), Card(10, 3), Card(11, 4), Card(14, 1)]
     a = [Card(14, 2), Card(14, 3)]

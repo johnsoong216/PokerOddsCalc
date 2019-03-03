@@ -1,6 +1,5 @@
 from card import *
-from collections import Counter
-
+from collections import Counter, OrderedDict
 
 class Categorizer:
     """
@@ -22,7 +21,6 @@ class Categorizer:
         self.cardlist = sorted(cardlist)
         self.category = 0
         self.assign_category()
-
 
     """
     Checks if all five cards are of the same suit
@@ -55,8 +53,9 @@ class Categorizer:
 
     def assign_category(self) -> None:
         nums = [card[0] for card in self.cardlist]
+        print(nums)
         nums_ordered = list(Counter(nums).values())
-        # print(nums_ordered)
+        print(nums_ordered)
 
         if len(set(self.cardlist)) != len(self.cardlist):
             self.category = 0
@@ -81,17 +80,36 @@ class Categorizer:
         else:
             self.category = 10
 
-
     def __str__(self) -> str:
         category_strings = {0: 'Impossible Combination', 1: 'Royal Flush', 2: 'Straight Flush', 3: 'Four of a Kind',
                             4: 'Full House', 5: 'Flush', 6: 'Straight', 7: 'Three of a Kind', 8: 'Two Pairs',
                             9: 'One Pair', 10: 'High Card'}
         return category_strings.get(self.category) + " " + str([card.__str__() for card in self.cardlist])
 
+    def assign_table(self):
+        temp = dict()
+        for card in self.cardlist:
+            if card[0] in temp.keys():
+                temp[card[0]] += 1
+            else:
+                temp[card[0]] = 1
+        temp = dict(sorted(temp.items(), key=lambda x: x[1], reverse=True))
+        print(temp)
+        # mydict.keys()[mydict.values().index(16)]
+
+
+
+        # result = []
+        # for item in temp:
+        #     for occurence in range(item[1]):
+        #         result.append(item[0])
+        # return result
+
 
 if __name__ == '__main__':
-    b = [Card(10, 1), Card(10, 2), Card(10, 3), Card(10, 4), Card(14, 1)]
+    b = [Card(10, 1), Card(10, 2), Card(8, 3), Card(7, 4), Card(7, 1)]
     a = Categorizer(b)
-    print(a.cardlist)
-    print(a.category)
+    a.assign_table()
+    # print(a.cardlist)
+    # print(a.category)
     # print(a)
