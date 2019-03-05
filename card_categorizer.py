@@ -115,9 +115,7 @@ class Categorizer:
 
 
 if __name__ == '__main__':
-    b = [Card(10, 1), Card(10, 2), Card(8, 3), Card(10, 4), Card(7, 1)]
+    b = [Card(10, 1), Card(10, 3), Card(8, 3), Card(10, 4), Card(8, 1)]
     a = Categorizer(b)
     a.assign_table()
-    # print(a.cardlist)
-    # print(a.category)
-    # print(a)
+    print(a)
