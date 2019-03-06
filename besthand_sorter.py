@@ -3,7 +3,7 @@ from card_categorizer import *
 import itertools
 
 """
-This class compares all possible hands and finds the best hand
+This class compares all possible hands and finds the best hand using the Model Class
 """
 
 
