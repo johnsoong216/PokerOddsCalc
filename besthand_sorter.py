@@ -13,17 +13,12 @@ class Sorter:
         self.flop = flop
         
 
-    # def besthand_solver(self,) -> "Categorizer":
-    #     print()
-
     def besthand_solver(self) -> list:
         all_cards = self.starting_hand + self.flop
         all_hands = itertools.combinations(all_cards, 5)
         best = all_cards[0:5]
         for hand in all_hands:
-            print(best)
             best = self.hand_compare(hand, best, False)
-        print(str(best) + str("final"))    
         return best
     
 
@@ -32,9 +27,6 @@ class Sorter:
     
         p1C = Categorizer(p1)
         p2C = Categorizer(p2)
-        
-        print(p1C)
-        print(p2C)
         if p1C.category < p2C.category:
             return p1
         elif p1C.category == p2C.category:
