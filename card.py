@@ -1,6 +1,6 @@
 class Card(tuple):
     """
-    A standard poker card with value and suit
+    A standard poker card with value and suit, Tuple Subclass
     Suit:
     - Diamond 1
     - Club 2
