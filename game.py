@@ -1,5 +1,5 @@
 """
-This class finds and lists all the distributions of the hand and winning probability
+This class is the game interface
 """
 from deck import Deck
 from card import Card
