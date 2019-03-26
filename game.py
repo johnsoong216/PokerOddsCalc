@@ -42,6 +42,8 @@ class Game:
         self.p1.append(_next)
         self.p2.append(_next)
         
+        print(self.p1)
+        print(self.p2)
         self.p1Outcome = []
         self.p2Outcome = []
         self.wld = []
@@ -50,7 +52,26 @@ class Game:
         all_hands = itertools.combinations(self.deck, 7 - len(self.p1))
         for hand in all_hands:
             self.comparison(self.p1, self.p2, list(hand))
-
+            
+        df1 = pd.DataFrame.from_dict(Counter(self.p1Outcome), orient='index')
+        df1.plot(kind='bar')
+        D = {1: 'Royal Flush', 2: 'Straight Flush', 3: 'Four of A Kind', 4: 'Full House', 5: 'Flush', 6: 'Straight', 7: 'Three of a Kind', 
+                   8: 'Two Pair', 9: 'One Pair', 10: 'High Card'}        
+        plt.bar(range(len(D)), D.values(), align = 'center')
+        plt.xticks(range(len(D)), list(D.keys()))
+        plt.show()
+        df2 = pd.DataFrame.from_dict(Counter(self.p2Outcome), orient='index')
+        df2.plot(kind='bar')
+        plt.bar(range(len(D)), D.values(), align = 'center')
+        plt.xticks(range(len(D)), list(D.keys()))
+        plt.show()
+        df3 = pd.DataFrame.from_dict(Counter(self.wld), orient='index')
+        df3.plot(kind='bar')
+        D = {1: "WIN", 0: "TIE", -1: "LOSS"}
+        plt.bar(range(len(D)), D.values(), align = 'center')
+        plt.xticks(range(len(D)), list(D.keys()))
+        plt.show() 
+            
 
             
     def comparison(self, p1:list, p2:list, hand:list) -> None:
@@ -65,10 +86,6 @@ class Game:
         p1C = Categorizer(p1)
         p2C = Categorizer(p2)
         
-        print(p1C)
-        print(p2C)
-        
-        
         self.p1Outcome.append(p1C.category)
         self.p2Outcome.append(p2C.category)
         
@@ -81,33 +98,41 @@ class Game:
             self.wld.append(0)
             
         
-        
+def replace(card:list, dictionary:dict):
+    new_list = []
+    for i in card:
+        result = dictionary.get(i)
+        new_list.append(result)
+    return new_list   
             
         
 if __name__ == '__main__':
-    t1 = time.time()
-    a = Game()
-    a.start(Card(14,1), Card(13,1), Card(11,2),Card(10,2))
-    a.flip(Card(11,1))
-    a.flip(Card(10,1))
-    a.flip(Card(5,2))
-    a.model()
-    t2 = time.time()
-    print(t2 - t1)
+    firstHand = input("Input Your Current Hand")
+    secondHand = input("Input Your Opponent's Hand")
+    fH = str.split(firstHand)
+    sH = str.split(secondHand)
+    fH = list("".join(fH))
+    sH = list("".join(sH))
+    print(fH)
+    print(sH)
+    game = Game()
+    conversion = {'d': 1, 'c': 2, 'h': 3, 's': 4, '2': 2, '3': 3, '4': 4, '5':5, '6':6, '7':7, '8':8, '9':9,
+                  'T': 10, 'J': 11, 'Q': 12, 'K':13, 'A':14}    
+    fH = replace(fH, conversion)
+    sH = replace(sH, conversion)
+    game.start(Card(fH[0], fH[1]), Card(fH[2], fH[3]), Card(sH[0], sH[1]), Card(sH[2], sH[3]))
+    while len(game.p1) < 7:
+        calculation = input("Do you want to calculate odds now? Enter True or False")
+        if calculation == 'True':
+            game.model()
+        else:
+            nextHand = input("Flip the Next Card")
+            nH = str.split(nextHand)
+            nH = list("".join(nH))
+            nH = replace(nH, conversion)
+            game.flip(Card(nH[0], nH[1]))
+                  
     
-    p1Count = Counter(a.p1Outcome)
-    p2Count = Counter(a.p2Outcome)
-    pWLD = Counter(a.wld)
-    
-    df = pd.DataFrame.from_dict(p1Count, orient='index')
-    df.plot(kind='bar')    
-    plt.show()
-    df = pd.DataFrame.from_dict(p2Count, orient='index')
-    df.plot(kind='bar') 
-    plt.show()
-    df = pd.DataFrame.from_dict(pWLD, orient='index')
-    df.plot(kind='bar')     
-    plt.show()
     
     
     
