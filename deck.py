@@ -12,14 +12,26 @@ class Deck:
         for suit in range(1, 5):
             for num in range(2, 15):
                 self.deck.append(Card(num, suit))
+                
+        self.current = 0    
+    
+    def __iter__(self) -> 'Deck':
+        return self
+    
+    def __next__(self) -> 'Card':
+        if self.current >= len(self.deck):
+            raise StopIteration        
+        result = self.deck[self.current]
+        self.current += 1
+        return result
 
-    def removeByCard(self, card: Card) -> Card:
+    def removeByCard(self, card: Card) -> None:
         if card in self.deck:
             self.deck.remove(card)
             return card
         return Card(1, 1)
 
-    def removeByIndex(self, index: int) -> Card:
+    def removeByIndex(self, index: int) -> None:
         if index <= len(self.deck):
             result = self.deck.get(index)
             self.deck.pop(index)

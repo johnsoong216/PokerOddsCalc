@@ -36,7 +36,7 @@ class Card(tuple):
     def __str__(self) -> str:
         suitStrings = {1: 'd', 2: 'c', 3: 'h', 4: 's'}
         numStrings = {2: '2', 3: '3', 4: '4', 5:'5', 6:'6', 7:'7', 8:'8', 9:'9',
-                      10: '10', 11: 'J', 12: 'Q', 13:'K', 14:'A'}
+                      10: 'T', 11: 'J', 12: 'Q', 13:'K', 14:'A'}
         return numStrings.get(self.value) + suitStrings.get(self.suit)
 
 
