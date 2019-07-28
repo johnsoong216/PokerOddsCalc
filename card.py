@@ -29,7 +29,7 @@ class Card(tuple):
 
     def __gt__(self, other) -> bool:
         if isinstance(other, Card):
-            return self.value >= other.value
+            return self.value > other.value
         return False
 
 
@@ -42,6 +42,8 @@ class Card(tuple):
 
 if __name__ == '__main__':
     a = Card(7, 3)
+    b = Card(7, 4)
+    print(a < b)
     print(a[1])
     print(a)
     print(a.value)
