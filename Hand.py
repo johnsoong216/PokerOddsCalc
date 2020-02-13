@@ -1,4 +1,5 @@
 import numpy as np
+from itertools import combinations
 from Exception import *
 
 
@@ -20,14 +21,16 @@ class Hand:
     """
 
     def __init__(self, cards=[]) -> None:
-        print("Create Hand")
         self.hand = self.create_hand(cards)
-        self._valid_hand(self.hand)
+#         self._valid_hand(self.hand)
 
         if len(self.hand) == 5:
             self.rank, self.in_rank_values = self.assign_rank(self.hand)
 
     def create_hand(self, cards):
+        if len(cards) > 5:
+            return max(list(map(Hand, combinations(cards, 5)))).hand
+
         cardlist = np.empty((len(cards),), dtype=object)
         cardlist[:] = sorted(cards)
         return cardlist
@@ -35,26 +38,53 @@ class Hand:
     ### Buggy Don't Need It
     #     def remove_card(self, card):
     #         self.hand = self.hand[self.hand != card]
+    @staticmethod
+    @np.vectorize
+    def concatenate(hand_1, hand_2):
+        if isinstance(hand_1, Hand) and isinstance(hand_2, Hand):
+            if len(np.append(hand_1.hand, hand_2.hand)) > 5:
+                return Hand(max(list(map(Hand, combinations(np.append(hand_1.hand, hand_2.hand), 5)))).hand)
+            return Hand(np.append(hand_1.hand, hand_2.hand))
+        elif isinstance(hand_1, Hand):
+            if len(np.append(hand_1.hand, hand_2)) > 5:
+                return Hand(max(list(map(Hand, combinations(np.append(hand_1.hand, hand_2), 5)))).hand)
+            return Hand(np.append(hand_1.hand, hand_2))
+        elif isinstance(hand_2, Hand):
+            if len(np.append(hand_1, hand_2.hand)) > 5:
+                return Hand(max(list(map(Hand, combinations(np.append(hand_1, hand_2.hand), 5)))).hand)
+            return Hand(np.append(hand_1, hand_2.hand))
+        else:
+            if len(np.append(hand_1, hand_2)) > 5:
+                return Hand(max(list(map(Hand, combinations(np.append(hand_1.hand, hand_2.hand), 5)))).hand)
+            return Hand(np.append(hand_1, hand_2))
+
 
     def __add__(self, other):
-        return Hand(np.append(self.hand, other.hand))
+        if isinstance(other, Hand):
+            return Hand(np.append(self.hand, other.hand))
+        else:
+            return Hand(np.append(self.hand, other))
 
     def __radd__(self, other):
-        return Hand(np.append(self.hand, other.hand))
+        if isinstance(other, Hand):
+            return Hand(np.append(self.hand, other.hand))
+        else:
+            return Hand(np.append(self.hand, other))
 
     def _valid_hand(self, hand):
-        if len(hand) > 5:
-            raise HandException("Hand Size has Exceeded the Limit of 5")
-        tupled_card = [tuple(card) for card in hand]
-        if len(tupled_card) != len(list(set(tupled_card))):
-            raise HandException("Duplicate Cards Found in Hand")
+#         if len(hand) > 5:
+#             raise HandException("Hand Size has Exceeded the Limit of 5")
+#         tupled_card = [tuple(card) for card in hand]
+#         if len(tupled_card) != len(list(set(tupled_card))):
+#             raise HandException("Duplicate Cards Found in Hand")
+        pass
 
     ### Helper functions to get hand values
     def _hand_values(self, hand):
-        return np.array(sorted([card[0] for card in hand]))
+        return sorted([card[0] for card in hand])
 
     def _hand_suits(self, hand):
-        return np.array(sorted([card[1] for card in hand]))
+        return sorted([card[1] for card in hand])
 
     ### Convenient Quick Check
     """
@@ -80,8 +110,8 @@ class Hand:
         # print(type(hand_values))
         # print(np.arange(hand_values[0], hand_values[0] + 5, 1))
         # print(hand_values == np.arange(hand_values[0], hand_values[-1] + 1, 1))
-        if (hand_values == np.arange(hand_values[0], hand_values[0] + 5, 1)).all()or (
-                hand_values == np.array([2, 3, 4, 5, 14])).all():
+        if hand_values == list(np.arange(hand_values[0], hand_values[0] + 5, 1)) or (
+                hand_values == [2,3,4,5,14]):
             return True
         return False
 
@@ -107,23 +137,7 @@ class Hand:
 
         ### Assign all other categories
         val, count = np.unique(hand_values, return_counts=True)
-        return self._rank_dict((max(count), min(count), len(count))), val[count.argsort()]
-
-    def in_rank_comparison(self, hand_value_1, hand_value_2):
-
-        if (hand_value_1 == np.array([2, 3, 4, 5, 14])).all():
-            hand_value_1 = np.array([1, 2, 3, 4, 5])
-        if (hand_value_2 == np.array([2, 3, 4, 5, 14])).all():
-            hand_value_2 = np.array([1, 2, 3, 4, 5])
-
-        if (hand_value_1 == hand_value_2).all():
-            return 0
-
-        for i in range(-1, -len(hand_value_1) - 1, -1):
-            if hand_value_1[i] > hand_value_2[i]:
-                return 1
-            elif hand_value_1[i] < hand_value_2[i]:
-                return -1
+        return self._rank_dict((max(count), min(count), len(count))), list(val[count.argsort()])
 
     def _rank_dict(self, max_min_len):
         rank_params_dict = {(4, 1, 2): 8, (3, 2, 2): 7, (3, 1, 3): 4, (2, 1, 3): 3, (2, 1, 4): 2, (1, 1, 5): 1}
@@ -135,7 +149,7 @@ class Hand:
         if isinstance(other, Hand):
             if self.rank != other.rank:
                 return False
-            elif self.in_rank_comparison(self.in_rank_values, other.in_rank_values) == 0:
+            elif Hand.in_rank_comparison(self.in_rank_values, other.in_rank_values) == 0:
                 return True
             return False
         return False
@@ -144,25 +158,34 @@ class Hand:
         if isinstance(other, Hand):
             if self.rank > other.rank:
                 return True
-            elif self.in_rank_comparison(self.in_rank_values, other.in_rank_values) == 1:
+            elif self.rank < other.rank:
+                return False
+            elif Hand.in_rank_comparison(self.in_rank_values, other.in_rank_values) == 1:
                 return True
             return False
         return False
 
     def __lt__(self, other) -> bool:
         if isinstance(other, Hand):
+#             print(self.hand, other.hand, 'self other hand')
+#             print(self.in_rank_values, other.in_rank_values, 'self other in rank')
+#             print(self.rank, other.rank, 'self other rank')
             if self.rank < other.rank:
                 return True
-            elif self.in_rank_comparison(self.in_rank_values, other.in_rank_values) == -1:
+            elif self.rank > other.rank:
+                return False
+            elif Hand.in_rank_comparison(self.in_rank_values, other.in_rank_values) == -1:
                 return True
             return False
         return False
 
     def __ge__(self, other) -> bool:
         if isinstance(other, Hand):
-            if self.rank < other.rank:
+            if self.rank > other.rank:
                 return True
-            elif self.in_rank_comparison(self.in_rank_values, other.in_rank_values) in [0, 1]:
+            elif self.rank < other.rank:
+                return False
+            elif Hand.in_rank_comparison(self.in_rank_values, other.in_rank_values) in [0, 1]:
                 return True
             return False
         return False
@@ -171,7 +194,9 @@ class Hand:
         if isinstance(other, Hand):
             if self.rank < other.rank:
                 return True
-            elif self.in_rank_comparison(self.in_rank_values, other.in_rank_values) in [0, -1]:
+            elif self.rank > other.rank:
+                return False
+            elif Hand.in_rank_comparison(self.in_rank_values, other.in_rank_values) in [0, -1]:
                 return True
             return False
         return False
@@ -179,11 +204,44 @@ class Hand:
     def __ne__(self, other) -> bool:
         if isinstance(other, Hand):
             if self.rank != other.rank:
-                return True
-            elif self.in_rank_comparison(self.in_rank_values, other.in_rank_values) != 0:
+                return False
+            elif Hand.in_rank_comparison(self.in_rank_values, other.in_rank_values) == 0:
                 return True
             return False
         return False
+
+    @staticmethod
+    def in_rank_comparison(hand_value_1, hand_value_2):
+
+        if hand_value_1 == [2, 3, 4, 5, 14]:
+            hand_value_1 = [1, 2, 3, 4, 5]
+        if hand_value_2 == [2, 3, 4, 5, 14]:
+            hand_value_2 = [1, 2, 3, 4, 5]
+
+        if hand_value_1 == hand_value_2:
+            return 0
+
+        for i in range(-1, -len(hand_value_1) - 1, -1):
+            if hand_value_1[i] > hand_value_2[i]:
+                return 1
+            elif hand_value_1[i] < hand_value_2[i]:
+                return -1
+
+
+    @staticmethod
+    @np.vectorize
+    def compare(hand_1, hand_2) -> int:
+        if hand_1.rank > hand_2.rank:
+            return 1
+        elif hand_1.rank < hand_2.rank:
+            return -1
+        return Hand.in_rank_comparison(hand_1.in_rank_values, hand_2.in_rank_values)
+
+    @staticmethod
+    @np.vectorize
+    def multi_compare() -> int:
+        pass
+
 
 
     ### Overwriting String Operation
