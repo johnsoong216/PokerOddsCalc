@@ -1,5 +1,5 @@
 from card import *
-from card_categorizer import *
+from Hand import *
 import itertools
 
 """

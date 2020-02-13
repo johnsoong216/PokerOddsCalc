@@ -4,7 +4,7 @@ This class is the game interface
 from deck import Deck
 from card import Card
 from besthand_sorter import Sorter
-from card_categorizer import Categorizer
+from Hand import Categorizer
 from collections import Counter
 import itertools
 import time
