@@ -20,19 +20,28 @@ class Hand:
     1: High Card         1, 1, 5
     """
 
-    def __init__(self, cards=[]) -> None:
-        self.hand = self.create_hand(cards)
+    def __init__(self, cards) -> None:
+        # if len(cards) > 5:
+        self.hand_candidates = self.create_hand(cards)
+
+        if len(cards) <= 5:
+            self.hand = self.create_hand(cards, sort=True)
 #         self._valid_hand(self.hand)
 
-        if len(self.hand) == 5:
-            self.rank, self.in_rank_values = self.assign_rank(self.hand)
+            if len(self.hand) == 5:
+                self.rank, self.in_rank_values = self.assign_rank(self.hand)
+            else:
+                self.rank, self.in_rank_values = 0, []
 
-    def create_hand(self, cards):
-        if len(cards) > 5:
-            return max(list(map(Hand, combinations(cards, 5)))).hand
+    def create_hand(self, cards, sort=False):
+        # if len(cards) > 5:
+        #     return max(list(map(Hand, combinations(cards, 5)))).hand
 
         cardlist = np.empty((len(cards),), dtype=object)
-        cardlist[:] = sorted(cards)
+        if sort:
+            cardlist[:] = sorted(cards)
+        else:
+            cardlist[:] = cards
         return cardlist
 
     ### Buggy Don't Need It
@@ -42,34 +51,40 @@ class Hand:
     @np.vectorize
     def concatenate(hand_1, hand_2):
         if isinstance(hand_1, Hand) and isinstance(hand_2, Hand):
-            if len(np.append(hand_1.hand, hand_2.hand)) > 5:
-                return Hand(max(list(map(Hand, combinations(np.append(hand_1.hand, hand_2.hand), 5)))).hand)
-            return Hand(np.append(hand_1.hand, hand_2.hand))
+            return Hand(np.append(hand_1.hand_candidates, hand_2.hand_candidates))
         elif isinstance(hand_1, Hand):
-            if len(np.append(hand_1.hand, hand_2)) > 5:
-                return Hand(max(list(map(Hand, combinations(np.append(hand_1.hand, hand_2), 5)))).hand)
-            return Hand(np.append(hand_1.hand, hand_2))
+            return Hand(np.append(hand_1.hand_candidates, hand_2))
         elif isinstance(hand_2, Hand):
-            if len(np.append(hand_1, hand_2.hand)) > 5:
-                return Hand(max(list(map(Hand, combinations(np.append(hand_1, hand_2.hand), 5)))).hand)
-            return Hand(np.append(hand_1, hand_2.hand))
+                # return Hand(max(list(map(Hand, combinations(np.append(hand_1, hand_2.hand), 5)))).hand)
+            return Hand(np.append(hand_1, hand_2.hand_candidates))
+                # return Hand(max(list(map(Hand, combinations(np.append(hand_1.hand, hand_2.hand), 5)))).hand)
+        return Hand(np.append(hand_1, hand_2))
+
+    @staticmethod
+    @np.vectorize
+    def find_max(hand):
+        if isinstance(hand, Hand):
+            if len(hand.hand_candidates) > 5:
+                return Hand(max(list(map(Hand, combinations(hand.hand_candidates, 5)))).hand_candidates)
+            return hand
         else:
-            if len(np.append(hand_1, hand_2)) > 5:
-                return Hand(max(list(map(Hand, combinations(np.append(hand_1.hand, hand_2.hand), 5)))).hand)
-            return Hand(np.append(hand_1, hand_2))
+            if len(hand.hand_candidates) > 5:
+                return Hand(max(list(map(Hand, combinations(hand, 5)))).hand_candidates)
+            return Hand(hand)
 
 
     def __add__(self, other):
         if isinstance(other, Hand):
-            return Hand(np.append(self.hand, other.hand))
+            return Hand(np.append(self.hand_candidates, other.hand_candidates))
         else:
-            return Hand(np.append(self.hand, other))
+            print(self.hand_candidates)
+            return Hand(np.append(self.hand_candidates, other))
 
     def __radd__(self, other):
         if isinstance(other, Hand):
-            return Hand(np.append(self.hand, other.hand))
+            return Hand(np.append(self.hand_candidates, other.hand_candidates))
         else:
-            return Hand(np.append(self.hand, other))
+            return Hand(np.append(self.hand_candidates, other))
 
     def _valid_hand(self, hand):
 #         if len(hand) > 5:
@@ -81,6 +96,7 @@ class Hand:
 
     ### Helper functions to get hand values
     def _hand_values(self, hand):
+        print(hand)
         return sorted([card[0] for card in hand])
 
     def _hand_suits(self, hand):
@@ -249,9 +265,9 @@ class Hand:
         category_strings = {10: 'Royal Flush', 9: 'Straight Flush', 8: 'Four of a Kind',
                             7: 'Full House', 6: 'Flush', 5: 'Straight', 4: 'Three of a Kind', 3: 'Two Pairs',
                             2: 'One Pair', 1: 'High Card'}
-        if len(self.hand) == 5:
-            return category_strings.get(self.rank) + " " + str([card.__str__() for card in self.hand])
-        return str([card.__str__() for card in self.hand])
+        if len(self.hand_candidates) == 5:
+            return category_strings.get(self.rank) + " " + str([card.__str__() for card in self.hand_candidates])
+        return str([card.__str__() for card in self.hand_candidates])
 
     #     def assign_table(self):
     #         temp = dict()
