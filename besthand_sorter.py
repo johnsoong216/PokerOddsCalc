@@ -1,5 +1,5 @@
 from card import *
-from Hand import *
+from hand import *
 import itertools
 
 """
