@@ -52,7 +52,7 @@ class Hand:
     def concatenate(hand_1, hand_2):
         if isinstance(hand_1, Hand) and isinstance(hand_2, Hand):
             return Hand(np.append(hand_1.hand_candidates, hand_2.hand_candidates))
-        elif isinstance(hand_1, Hand):
+        elif isinstance(hand_1, Hand):np.array([hand_score(hand_combos[i, :, :]) for i in range(1000)])
             return Hand(np.append(hand_1.hand_candidates, hand_2))
         elif isinstance(hand_2, Hand):
                 # return Hand(max(list(map(Hand, combinations(np.append(hand_1, hand_2.hand), 5)))).hand)
