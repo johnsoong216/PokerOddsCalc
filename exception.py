@@ -6,5 +6,3 @@ class HandException(Exception):
 
 class DeckException(Exception):
     pass
-
-    

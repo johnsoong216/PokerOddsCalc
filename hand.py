@@ -1,4 +1,5 @@
 from utils import *
+from exception import *
 
 
 
@@ -19,35 +20,22 @@ class Hand:
 
     def add_cards(self, cards):
 
-        #         if type(cards) == np.ndarray and cards.ndim == 1:
-        #             cards = [cards]
-        #         elif type(cards) == list and type(cards[0]) == int:
-        #             cards = [cards]
-        #         elif type(cards) == str:
-        #             cards = [cards]
+        cards = format_cards(cards)
 
         for card in cards:
-            self.add_card(card)
+            self.card_arr = add_card(card, self.card_arr)
 
-    def add_card(self, card):
+        if len(self.card_arr) > 2:
+            raise HandException("Cannot Have more than two cards in hand")
 
-        if type(card) == str:
-            if len(self.card_arr) == 0:
-                self.card_arr = card_str_to_arr([card])
-            else:
-                self.card_arr = np.concatenate([
-                    self.card_arr,
-                    card_str_to_arr([card])
-                ], axis=0)
+    def remove_cards(self, cards):
 
-        else:
-            if len(self.card_arr) == 0:
-                self.card_arr = card_str_to_arr([card])
-            else:
-                self.card_arr = np.concatenate([
-                    self.card_arr,
-                    np.array([card])
-                ], axis=0)
+        cards = format_cards(cards)
+
+        for card in cards:
+            self.card_arr = remove_card(card, self.card_arr)
+
+
 
     def __str__(self):
         return " ".join(card_arr_to_str(self.card_arr))

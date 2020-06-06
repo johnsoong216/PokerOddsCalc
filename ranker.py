@@ -1,39 +1,46 @@
 import multiprocessing
 from joblib import Parallel, delayed
 import numpy as np
+from collections import Counter
 
-def rank_all_hands(hand_combos):
-    return np.max(
-                np.array(Parallel(n_jobs=multiprocessing.cpu_count(), backend="threading")\
-                 (delayed(parallel_rank_hand)(sce, hand_combos) for sce in range(len(hand_combos.shape[1])))),
-                axis=1)
+class Ranker:
 
-def parallel_rank_hand(scenario, hand_combos):
-    return rank_one_hand(hand_combos[:, scenario, :, :])
+    @staticmethod
+    def rank_all_hands(hand_combos):
 
-def rank_one_hand(hand_combos):
-    num_combos = hand_combos[:, :, 0]
-    num_combos.sort(axis=1)
+        rank_res_arr = np.zeros(shape=(hand_combos.shape[1], hand_combos.shape[0]))
+        Parallel(n_jobs=multiprocessing.cpu_count(), backend="threading")\
+                     (delayed(Ranker.parallel_rank_hand)(sce, hand_combos, rank_res_arr) for sce in range(hand_combos.shape[1]))
+        return np.max(rank_res_arr, axis=0)
 
-    suit_combos = hand_combos[:, :, 1]
+    @staticmethod
+    def parallel_rank_hand(scenario, hand_combos, rank_res_arr):
+        rank_res_arr[scenario, :] = Ranker.rank_one_hand(hand_combos[:, scenario, :, :])
 
-    suit_arr = gen_suit_arr(suit_combos)
-    straight_arr = gen_straight_arr(num_combos)
+    @staticmethod
+    def rank_one_hand(hand_combos):
+        num_combos = hand_combos[:, :, 0]
+        num_combos.sort(axis=1)
 
-    rank_arr = np.zeros(num_combos.shape[0], dtype=np.int)
+        suit_combos = hand_combos[:, :, 1]
 
-    straight_flush_check(num_combos, rank_arr, straight_arr, suit_arr)
-    four_of_a_kind_check(num_combos, rank_arr)
-    full_house_check(num_combos, rank_arr)
-    flush_check(rank_arr, suit_arr)
-    straight_check(num_combos, rank_arr, straight_arr)
-    three_of_a_kind_check(num_combos, rank_arr)
-    two_pairs_check(num_combos, rank_arr)
-    one_pair_check(num_combos, rank_arr)
+        suit_arr = gen_suit_arr(suit_combos)
+        straight_arr = gen_straight_arr(num_combos)
 
-    return rank_arr * (16 ** 5) + np.sum(num_combos * np.power(16, np.arange(0, 5)), axis=1)
+        rank_arr = np.zeros(num_combos.shape[0], dtype=np.int)
+
+        straight_flush_check(num_combos, rank_arr, straight_arr, suit_arr)
+        four_of_a_kind_check(num_combos, rank_arr)
+        full_house_check(num_combos, rank_arr)
+        flush_check(rank_arr, suit_arr)
+        straight_check(num_combos, rank_arr, straight_arr)
+        three_of_a_kind_check(num_combos, rank_arr)
+        two_pairs_check(num_combos, rank_arr)
+        one_pair_check(num_combos, rank_arr)
+        return rank_arr * (16 ** 5) + np.sum(num_combos * np.power(16, np.arange(0, 5)), axis=1)
 
 
+### Helper Functions
 def gen_straight_arr(num_combos):
     straight_check = np.zeros(len(num_combos), dtype=np.int)
     for i in range(4):
@@ -64,8 +71,11 @@ def four_of_a_kind_check(num_combos, rank_arr):
 
     rank_arr[(rank_arr == 0) & (small | large)] = 7
 
+    # print(Counter(rank_arr))
     reorder_idx = (rank_arr == 7) & small
     num_combos[reorder_idx, :] = np.concatenate([num_combos[reorder_idx, 4:], num_combos[reorder_idx, :4]], axis=1)
+
+    # print(num_combos[rank_arr == 7])
 
 
 def full_house_check(num_combos, rank_arr):
@@ -78,6 +88,7 @@ def full_house_check(num_combos, rank_arr):
         & (num_combos[:, 2:5] == num_combos[:, 4:]), axis=1)  # 22444
 
     rank_arr[(rank_arr == 0) & (small | large)] = 6
+    # print(Counter(rank_arr))
 
     reorder_idx = (rank_arr == 6) & small
     num_combos[reorder_idx, :] = np.concatenate([num_combos[reorder_idx, 3:], num_combos[reorder_idx, :3]], axis=1)
