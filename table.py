@@ -4,7 +4,7 @@ import random
 
 import numpy as np
 
-from exception import *
+from exceptions import *
 from utils import *
 from hand import Hand
 from ranker import *
