@@ -6,12 +6,20 @@ from collections import Counter
 class Ranker:
 
     @staticmethod
-    def rank_all_hands(hand_combos):
+    def rank_all_hands(hand_combos, return_all=False):
 
         rank_res_arr = np.zeros(shape=(hand_combos.shape[1], hand_combos.shape[0]))
-        Parallel(n_jobs=multiprocessing.cpu_count(), backend="threading")\
+        if hand_combos.shape[1] >= 1000:
+            Parallel(n_jobs=multiprocessing.cpu_count(), backend="threading")\
                      (delayed(Ranker.parallel_rank_hand)(sce, hand_combos, rank_res_arr) for sce in range(hand_combos.shape[1]))
-        return np.max(rank_res_arr, axis=0)
+        else:
+            for sce in range(hand_combos.shape[1]):
+                Ranker.parallel_rank_hand(sce, hand_combos, rank_res_arr)
+
+        if return_all:
+            return rank_res_arr
+        else:
+            return np.max(rank_res_arr, axis=0)
 
     @staticmethod
     def parallel_rank_hand(scenario, hand_combos, rank_res_arr):
