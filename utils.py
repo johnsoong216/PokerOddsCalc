@@ -63,7 +63,6 @@ def remove_card(card, card_arr):
         card_check = (card_arr[:, 0] == card[0]) & (card_arr[:, 1] == card[1])
     if not card_check.sum():
         raise DeckException(f"Card {card if type(card) == str else ' '.join(card_arr_to_str([card]))} is not in the Deck")
-
     return card_arr[~card_check]
 
 def add_card(card, card_arr):

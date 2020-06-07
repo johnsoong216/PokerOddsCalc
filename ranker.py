@@ -1,5 +1,8 @@
 import multiprocessing
 from joblib import Parallel, delayed
+import timeit
+import logging
+
 import numpy as np
 from collections import Counter
 
@@ -8,14 +11,16 @@ class Ranker:
     @staticmethod
     def rank_all_hands(hand_combos, return_all=False):
 
+        # start = timeit.default_timer()
         rank_res_arr = np.zeros(shape=(hand_combos.shape[1], hand_combos.shape[0]))
-        if hand_combos.shape[1] >= 1000:
-            Parallel(n_jobs=multiprocessing.cpu_count(), backend="threading")\
-                     (delayed(Ranker.parallel_rank_hand)(sce, hand_combos, rank_res_arr) for sce in range(hand_combos.shape[1]))
-        else:
-            for sce in range(hand_combos.shape[1]):
-                Ranker.parallel_rank_hand(sce, hand_combos, rank_res_arr)
-
+        # if hand_combos.shape[0] >= 100000 and hand_combos.shape[1] > 1:
+        #     Parallel(n_jobs=multiprocessing.cpu_count(), backend="threading")\
+        #              (delayed(Ranker.parallel_rank_hand)(sce, hand_combos, rank_res_arr) for sce in range(hand_combos.shape[1]))
+        # else:
+        for sce in range(hand_combos.shape[1]):
+            Ranker.parallel_rank_hand(sce, hand_combos, rank_res_arr)
+        # end = timeit.default_timer()
+        # logging.info(f"Ranking all hands time cost: {end - start}")
         if return_all:
             return rank_res_arr
         else:
@@ -79,11 +84,9 @@ def four_of_a_kind_check(num_combos, rank_arr):
 
     rank_arr[(rank_arr == 0) & (small | large)] = 7
 
-    # print(Counter(rank_arr))
     reorder_idx = (rank_arr == 7) & small
     num_combos[reorder_idx, :] = np.concatenate([num_combos[reorder_idx, 4:], num_combos[reorder_idx, :4]], axis=1)
 
-    # print(num_combos[rank_arr == 7])
 
 
 def full_house_check(num_combos, rank_arr):
@@ -96,7 +99,6 @@ def full_house_check(num_combos, rank_arr):
         & (num_combos[:, 2:5] == num_combos[:, 4:]), axis=1)  # 22444
 
     rank_arr[(rank_arr == 0) & (small | large)] = 6
-    # print(Counter(rank_arr))
 
     reorder_idx = (rank_arr == 6) & small
     num_combos[reorder_idx, :] = np.concatenate([num_combos[reorder_idx, 3:], num_combos[reorder_idx, :3]], axis=1)

@@ -1,6 +1,8 @@
 import multiprocessing
 from joblib import Parallel, delayed
 import random
+import timeit
+import logging
 
 import numpy as np
 
@@ -8,6 +10,9 @@ from exceptions import *
 from utils import *
 from hand import Hand
 from ranker import *
+
+logger = logging.getLogger()
+logger.setLevel(logging.DEBUG)
 
 
 class Table:
@@ -45,18 +50,6 @@ class Table:
             self.community_arr = add_card(card, self.community_arr)
             self.deck_arr = remove_card(card, self.deck_arr)
 
-
-    def current_hand(self):
-
-        output_dict = {}
-        if len(self.community_arr) < 3:
-            raise HandException("Please Flop to form a valid hand")
-
-        for player in range(self.num_players):
-            output_dict[f"Player {player + 1} Current Hand"] = self.player_hands[player + 1].hand_type(
-                self.community_arr)
-        return output_dict
-
     def simulation_preparation(self, num_scenarios):
 
         for player in self.player_hands:
@@ -66,9 +59,9 @@ class Table:
         total_idx = comb_index(len(self.deck_arr), 5 - len(self.community_arr))
         undrawn_combos = self.deck_arr[total_idx]
         if num_scenarios != 'all':
-
             if len(undrawn_combos) > num_scenarios:
                 undrawn_combos = undrawn_combos[np.array(random.sample(range(len(undrawn_combos)), num_scenarios))]
+
         if len(self.community_arr) > 0:
             community_cards = np.repeat([self.community_arr], len(undrawn_combos), axis=0)
         else:
@@ -132,14 +125,24 @@ class Table:
         return outcome_dict
 
     def next_round(self, verbose=True):
-        if len(self.community_arr) == 0:
-            added_card = self.random_card(3)
-        else:
-            added_card = self.random_card(1)
 
-        if verbose:
-            print(f"{'Flop' if len(self.community_arr) == 3 else 'Turn' if len(self.community_arr) == 4 else 'River'} cards are {' '.join(card_arr_to_str(added_card))}")
-        self.add_to_community(added_card)
+        hand_player_cards = True
+        for player in self.player_hands:
+            if len(self.player_hands[player].card_arr) == 0:
+                hand_player_cards = False
+                added_card = self.random_card(self.player_hands[player].hand_limit)
+                self.add_to_hand(player, added_card)
+                logging.info(f"Giving Player {player} {' '.join(card_arr_to_str(added_card))}")
+
+        if hand_player_cards:
+            if len(self.community_arr) == 0:
+                added_card = self.random_card(3)
+            else:
+                added_card = self.random_card(1)
+
+            if verbose:
+                logging.info(f"{'Flop' if len(self.community_arr) == 0 else 'Turn' if len(self.community_arr) == 3 else 'River'} card:  {' '.join(card_arr_to_str(added_card))}")
+            self.add_to_community(added_card)
 
 
     def random_card(self, num_cards):
@@ -155,7 +158,30 @@ class Table:
         return " ".join(card_arr_to_str(self.deck_arr))
 
     def view_hand(self):
-        return {"Player " + str(player): str(self.player_hands[player]) for player in self.player_hands}
+        output_dict = {}
+        if len(self.community_arr) < 3:
+            raise HandException("Please Flop to form a valid hand")
+
+        for player in range(self.num_players):
+            output_dict[f"Player {player + 1} Current Hand"] = self.player_hands[player + 1].hand_evaluation(
+                self.community_arr)
+        return output_dict
+
+    def view_result(self):
+        player_rank = np.zeros(self.num_players, dtype=np.int)
+        player_hand_type = np.zeros(self.num_players, dtype=np.int)
+
+        for player in range(self.num_players):
+            player_combos, player_res_arr = self.player_hands[player + 1].hand_value(self.community_arr)
+            player_rank[player] = np.max(player_res_arr)
+            player_hand_type[player] = np.max(player_res_arr) // 16 ** 5
+
+        if (np.max(player_rank) == player_rank).sum() == 1:
+            return f"Player {np.argmax(player_rank) + 1} wins with a {hand_type_dict[player_hand_type[np.argmax(player_rank)]]}"
+        else:
+            winners, = np.where(np.max(player_rank) == player_rank)
+            return f"Player {', '.join((winners + 1).astype(str))} ties with a {hand_type_dict[player_hand_type[winners[0]]]}"
+
 
 
 class HoldemTable(Table):
@@ -167,23 +193,30 @@ class HoldemTable(Table):
 
     def simulate(self, num_scenarios=150000, odds_type="tie_win", final_hand=False):
 
+        start = timeit.default_timer()
         community_cards, undrawn_combos = self.simulation_preparation(num_scenarios)
-        res_arr = self.simulate_calculation(community_cards, undrawn_combos)
+        # end = timeit.default_timer()
+        # logging.info(f"Generate Hand Combinations Time Cost: {end - start}s")
 
+        # start = timeit.default_timer()
+        res_arr = self.simulate_calculation(community_cards, undrawn_combos)
+        # end = timeit.default_timer()
+        # logging.info(f"Calculation Time Cost: {end - start}s")
         outcome_dict = self.simulation_analysis(odds_type, res_arr)
 
         if final_hand:
             final_hand_dict = self.hand_strength_analysis(res_arr)
+            logging.info(f"{min([len(undrawn_combos), num_scenarios]) * 21 * self.num_players} Simulations in {np.round(timeit.default_timer() - start, 2)}s")
             return outcome_dict, final_hand_dict
-        return outcome_dict
 
+        logging.info(f"{min([len(undrawn_combos), num_scenarios]) * 21 * self.num_players} Simulations in {np.round(timeit.default_timer() - start, 2)}s")
+        return outcome_dict
 
     def simulate_calculation(self, community_cards, undrawn_combos):
         res_arr = np.zeros(shape=(len(undrawn_combos), self.num_players), dtype=np.int)
-        if self.num_players <= 2:
+        if self.num_players >= 2:
             Parallel(n_jobs=multiprocessing.cpu_count(), backend="threading") \
-                (delayed(self.gen_single_hand)(community_cards, player, undrawn_combos, res_arr) for player in
-                 range(self.num_players))
+                (delayed(self.gen_single_hand)(community_cards, player, undrawn_combos, res_arr) for player in range(self.num_players))
         else:
             for player in range(self.num_players):
                 self.gen_single_hand(community_cards, player, undrawn_combos, res_arr)
@@ -212,21 +245,22 @@ class OmahaTable(Table):
 
     def simulate(self, num_scenarios=25000, odds_type="tie_win", final_hand=False):
 
+        start = timeit.default_timer()
         community_cards, undrawn_combos = self.simulation_preparation(num_scenarios)
-
         res_arr = self.simulate_calculation(community_cards, undrawn_combos)
-
         outcome_dict = self.simulation_analysis(odds_type, res_arr)
 
         if final_hand:
             final_hand_dict = self.hand_strength_analysis(res_arr)
+            logging.info(f"{min([len(undrawn_combos), num_scenarios]) * 60 * self.num_players} Simulations in {np.round(timeit.default_timer() - start, 2)}s")
             return outcome_dict, final_hand_dict
+        logging.info(f"{min([len(undrawn_combos), num_scenarios]) * 60 * self.num_players} Simulations in {np.round(timeit.default_timer() - start, 2)}s")
         return outcome_dict
 
     def simulate_calculation(self, community_cards, undrawn_combos):
         res_arr = np.zeros(shape=(len(undrawn_combos), self.num_players), dtype=np.int)
 
-        if self.num_players > 2:
+        if self.num_players >= 2:
             Parallel(n_jobs=multiprocessing.cpu_count(), backend="threading") \
                 (delayed(self.gen_single_hand)(community_cards, player, undrawn_combos, res_arr) for player in
                  range(self.num_players))
@@ -236,6 +270,7 @@ class OmahaTable(Table):
         return res_arr
 
     def gen_single_hand(self, community_cards, player, undrawn_combos, res_arr):
+
 
         if community_cards is None:
             community_combos = undrawn_combos[:, comb_index(5, 3), :]
@@ -247,12 +282,14 @@ class OmahaTable(Table):
         hand_combos = np.repeat([self.player_hands[player + 1].card_arr], len(undrawn_combos), axis=0)[:,
                       comb_index(4, 2), :]
 
-        cur_player_cards = np.zeros(shape=(len(undrawn_combos), 60, 5, 2), dtype=np.int)
+        cur_player_cards = np.concatenate(
+            [np.repeat(hand_combos, repeats=10, axis=1), np.concatenate(6 * [community_combos], axis=1)], axis=2)
 
-        for scenario in range(len(undrawn_combos)):
-            for i, comm in enumerate(community_combos[scenario, :, :, :]):
-                for j, hand in enumerate(hand_combos[scenario, :, :, :]):
-                    cur_player_cards[scenario, i * 6 + j, :, :] = np.concatenate([comm, hand])
+        # cur_player_cards = np.zeros(shape=(len(undrawn_combos), 60, 5, 2), dtype=np.int)
+        # for scenario in range(len(undrawn_combos)):
+        #     for i, comm in enumerate(community_combos[scenario, :, :, :]):
+        #         for j, hand in enumerate(hand_combos[scenario, :, :, :]):
+        #             cur_player_cards[scenario, i * 6 + j, :, :] = np.concatenate([comm, hand])
 
         res_arr[:, player] = Ranker.rank_all_hands(cur_player_cards)
 
